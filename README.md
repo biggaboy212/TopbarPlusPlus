@@ -6,6 +6,30 @@ A patched TopbarPlus for executors. Construct dynamic and intuitive topbar icons
 
 - [View the Docs](./docs/index.md) *(Original TopbarPlus docs)*
 
+## Installation & Usage
+
+There are two main ways to use TopbarPlusPlus
+
+### Downloading a build
+
+You can get a build from our releases page.
+
+[View the latest release](https://github.com/biggaboy212/TopbarPlusPlus/releases/latest)
+
+### Dynamic fetching over HTTP
+
+> This will use `loadstring` and `HttpGetAsync`.
+
+```luau
+local function importRelease(owner, repo, version, file)
+    local tag = (version == "latest" and "latest/download" or "download/"..version)
+
+    return loadstring(game:HttpGetAsync(("https://github.com/%s/%s/releases/%s/%s"):format(owner, repo, tag, file)), file)()
+end
+
+local topbarPP = importRelease("biggaboy212", "TopbarPlusPlus", "latest", "topbarPP.luau")
+```
+
 ## Star History
 
 <a href="https://www.star-history.com/?repos=biggaboy212%2FTopbarPlusPlus&type=date&legend=top-left">
