@@ -295,7 +295,7 @@ return function(icon)
 	
 	local WAIT_DURATION = 0.5
 	local RECOVER_PERIOD = 0.3
-	local Icon = require(icon.iconModule)
+	local Icon = icon._iconRef
 	captionJanitor:add(icon.stateChanged:Connect(function(stateName)
 		if stateName == "Viewing" then
 			local lastClock = Icon.captionLastClosedClock

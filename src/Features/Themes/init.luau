@@ -7,8 +7,8 @@
 
 -- LOCAL
 local Themes = {}
-local Utility = require(script.Parent.Parent.Utility)
-local baseTheme = require(script.Default)
+local Utility = require("../Utility")
+local baseTheme = require("@self/Default")
 
 
 
@@ -261,13 +261,10 @@ function Themes.set(icon, theme)
 	-- ensuring Deselected merge into missing Selected, saving that internal state,
 	-- then checking to see if the appearance of the icon needs to be updated
 	local themesJanitor = icon.themesJanitor
-	themesJanitor:clean()
+	themesJanitor:Cleanup()
 	themesJanitor:add(icon.stateChanged:Connect(function()
 		Themes.change(icon)
 	end))
-	if typeof(theme) == "Instance" and theme:IsA("ModuleScript") then
-		theme = require(theme)
-	end
 	icon.appliedTheme = theme
 	Themes.rebuild(icon)
 end

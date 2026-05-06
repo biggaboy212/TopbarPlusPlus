@@ -1,0 +1,55 @@
+{
+	"deployment": {
+		"github": {
+			"owner": "biggaboy212",
+			"repo": "TopbarPlusPlus"
+		}
+	},
+
+	"buildConfigs": [
+		{
+			"name": "Debug",
+			"promptVersion": false,
+			"promptDeploy": false,
+			"frame": "pipeline/frames/stable.luau",
+			"darkluaConfig": "pipeline/darklua/unminified.json",
+			"input": "src/main.luau",
+			"output": "generated/debug/topbarPP.luau"
+		},
+		{
+			"name": "Beta",
+			"promptVersion": true,
+			"promptDeploy": true,
+			"prerelease": true,
+			"frame": "pipeline/frames/stable.luau",
+			"darkluaConfig": "pipeline/darklua/stable.json",
+			"input": "src/main.luau",
+			"output": "generated/beta/topbarPP.luau",
+
+			"variants": [
+				{
+					"name": "Unminified",
+					"darkluaConfig": "pipeline/darklua/unminified.json",
+					"output": "generated/beta/topbarPP-unminified.luau"
+				}
+			]
+		},
+		{
+			"name": "Release",
+			"promptVersion": true,
+			"promptDeploy": true,
+			"frame": "pipeline/frames/stable.luau",
+			"darkluaConfig": "pipeline/darklua/stable.json",
+			"input": "src/main.luau",
+			"output": "generated/release/topbarPP.luau",
+
+			"variants": [
+				{
+					"name": "Unminified",
+					"darkluaConfig": "pipeline/darklua/unminified.json",
+					"output": "generated/release/topbarPP-unminified.luau"
+				}
+			]
+		}
+	]
+}

@@ -7,7 +7,49 @@ local Utility = {}
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 
+type ExpectedObject = ((...any) -> ...any) | Instance | ServiceProvider
 
+Utility.Clone = function(object: any)
+	local clonedObject: any
+
+	if type(object) == "function" then
+		clonedObject = clonefunction and clonefunction(object)
+	elseif typeof(object) == "Instance" then
+		clonedObject = cloneref and cloneref(object)
+	end
+
+	return clonedObject or object
+end
+
+Utility.ProtectUI = function(gui: Instance?): Instance | string
+	local sHiddenUi, hiddenUi = pcall(function()
+		return gethui()
+	end)
+
+	local sCoreGui, coreGui = pcall(function()
+		local layer = Utility.Clone(game:GetService("CoreGui"))
+
+		if layer and layer.ClassName then
+			return layer
+		end
+
+		return
+	end)
+
+	local container = sHiddenUi and hiddenUi
+		or sCoreGui and coreGui
+		or Utility.Clone(game:GetService("Players")).LocalPlayer.PlayerGui
+
+	if gui then
+		local success, err = pcall(function()
+			gui.Parent = container
+		end)
+		
+		return success and gui or err
+	end
+
+	return container
+end
 
 -- FUNCTIONS
 function Utility.createStagger(delayTime, callback, delayInitially)
@@ -146,7 +188,7 @@ function Utility.getClippedContainer(screenGui)
 	return clippedContainer
 end
 
-local Janitor = require(script.Parent.Packages.Janitor)
+local Janitor = require("./Packages/Janitor")
 local GuiService = game:GetService("GuiService")
 function Utility.clipOutside(icon, instance)
 	local cloneJanitor = icon.janitor:add(Janitor.new())
@@ -178,11 +220,20 @@ function Utility.clipOutside(icon, instance)
 	valueInstanceCopy.Parent = instance
 
 	local screenGui
-	local Icon = require(icon.iconModule)
+	local Icon = icon._iconRef
 	local container = Icon.container
 	local function updateScreenGui()
-		local originalScreenGui = originalParent:FindFirstAncestorWhichIsA("ScreenGui")
-		screenGui = if string.match(originalScreenGui.Name, "Clipped") then originalScreenGui else container[originalScreenGui.Name.."Clipped"]
+		local originalScreenGui = originalParent and originalParent:FindFirstAncestorWhichIsA("ScreenGui")
+		if not originalScreenGui then
+			return
+		end
+		if string.match(originalScreenGui.Name, "Clipped") then
+			screenGui = originalScreenGui
+			return
+		end
+		-- If we're integrated into an external topbar, there may be no matching
+		-- "Clipped" ScreenGui in our container. Fall back gracefully.
+		screenGui = container[originalScreenGui.Name.."Clipped"] or originalScreenGui
 		instance.AnchorPoint = Vector2.new(0, 0)
 		instance.Parent = Utility.getClippedContainer(screenGui)
 	end
@@ -368,7 +419,7 @@ function Utility.joinFeature(originalIcon, parentIcon, iconsArray, scrollingFram
 
 	-- This is resonsible for moving the icon under a feature like a dropdown
 	local joinJanitor = originalIcon.joinJanitor
-	joinJanitor:clean()
+	joinJanitor:Cleanup()
 	if not scrollingFrameOrFrame then
 		originalIcon:leave()
 		return
@@ -430,7 +481,7 @@ function Utility.joinFeature(originalIcon, parentIcon, iconsArray, scrollingFram
 				break
 			end
 		end
-		local Icon = require(originalIcon.iconModule)
+		local Icon = originalIcon._iconRef
 		local parentIcon = Icon.getIconByUID(originalIcon.parentIconUID)
 		if not parentIcon then
 			return

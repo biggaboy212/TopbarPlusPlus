@@ -34,54 +34,31 @@
 
 
 
+
+-- MODULES
+local Signal = require("@self/Packages/GoodSignal")
+local Janitor = require("@self/Packages/Janitor")
+local Utility = require("@self/Utility")
+local Themes = require("@self/Features/Themes")
+local Gamepad = require("@self/Features/Gamepad")
+local Overflow = require("@self/Features/Overflow")
+local Icon = {}
+Icon.__index = Icon
+
 -- SERVICES
-local UserInputService = game:GetService("UserInputService")
-local ContentProvider = game:GetService("ContentProvider")
-local StarterGui = game:GetService("StarterGui")
-local Players = game:GetService("Players")
-local Types = require(script.Types)
-
-
+local UserInputService = Utility.Clone(game:GetService("UserInputService"))
+local ContentProvider = Utility.Clone(game:GetService("ContentProvider"))
+local StarterGui = Utility.Clone(game:GetService("StarterGui"))
+local Types = require("@self/Types")
 
 -- TYPES
 export type Icon = Types.Icon
 
 
 
--- REFERENCE HANDLER
--- Multiple Icons packages may exist at runtime (for instance if the developer additionally uses HD Admin)
--- therefore this ensures that the first required package becomes the dominant and only functioning module
-local iconModule = script
-local Reference = require(iconModule.Reference)
-local referenceObject = Reference.getObject()
-local leadPackage = referenceObject and referenceObject.Value
-if leadPackage and leadPackage ~= iconModule then
-	return require(leadPackage) :: Types.StaticIcon
-end
-if not referenceObject then
-	Reference.addToReplicatedStorage()
-end
-
-
-
--- MODULES
-local Signal = require(iconModule.Packages.GoodSignal)
-local Janitor = require(iconModule.Packages.Janitor)
-local Utility = require(iconModule.Utility)
-local Themes = require(iconModule.Features.Themes)
-local Gamepad = require(iconModule.Features.Gamepad)
-local Overflow = require(iconModule.Features.Overflow)
-local Icon = {}
-Icon.__index = Icon
-
-
-
 --- LOCAL
-local localPlayer = Players.LocalPlayer
-local themes = iconModule.Features.Themes
 local iconsDict = {}
 local anyIconSelected = Signal.new()
-local elements = iconModule.Elements
 local totalCreatedIcons = 0
 local preferredInput = {
 	mobile = Enum.PreferredInput.Touch,
@@ -94,11 +71,16 @@ local preferredInput = {
 -- PUBLIC VARIABLES
 Icon.baseDisplayOrderChanged = Signal.new()
 Icon.baseDisplayOrder = 10
-Icon.baseTheme = require(themes.Default)
+Icon.baseTheme = require("@self/Features/Themes/Default")
 Icon.isOldTopbar = false -- Logic has been moved to Container
 Icon.iconsDictionary = iconsDict
 Icon.insetHeightChanged = Signal.new()
-Icon.container = require(elements.Container)(Icon)
+Icon.container = require("@self/Elements/Container")(Icon)
+-- Optional integration point: if a different TopbarPlus-like module already
+-- created holders in CoreGui/PlayerGui, Overflow can populate these so that
+-- icons render inside the host topbar instead of a private container.
+Icon.topbarHoldersOverride = nil
+Icon.topbarPrimaryScreenGuiOverride = nil
 Icon.topbarEnabled = true
 Icon.iconAdded = Signal.new()
 Icon.iconRemoved = Signal.new()
@@ -167,11 +149,10 @@ end
 task.defer(Gamepad.start, Icon)
 task.defer(Overflow.start, Icon)
 task.defer(function()
-	local playerGui = localPlayer:WaitForChild("PlayerGui")
 	for _, screenGui in pairs(Icon.container) do
-		screenGui.Parent = playerGui
+		Utility.ProtectUI(screenGui)
 	end
-	require(iconModule.Attribute)
+	require("@self/Attribute")
 end)
 
 
@@ -225,7 +206,7 @@ function Icon.new()
 	self.menuChildAdded = janitor:add(Signal.new())
 
 	-- Properties
-	self.iconModule = iconModule
+	self._iconRef = Icon
 	self.UID = iconUID
 	self.isEnabled = true
 	self.enabled = self.isEnabled -- Backwards compatability
@@ -254,7 +235,7 @@ function Icon.new()
 	self.creationTime = os.clock()
 
 	-- Widget is the new name for an icon
-	local widget = janitor:add(require(elements.Widget)(self, Icon))
+	local widget = janitor:add(require("@self/Elements/Widget")(self, Icon))
 	self.widget = widget
 	self:setAlignment()
 	
@@ -711,7 +692,7 @@ function Icon:notify(customClearSignal, noticeId)
 	-- Roblox event (e.g. Instance.new("BindableEvent").Event)
 	local notice = self.notice
 	if not notice then
-		notice = require(elements.Notice)(self, Icon)
+		notice = require("@self/Elements/Notice")(self, Icon)
 		self.notice = notice
 	end
 	self.noticeStarted:Fire(customClearSignal, noticeId)
@@ -773,14 +754,25 @@ function Icon:align(leftCenterOrRight, isFromParentIcon)
 	if direction ~= "left" and direction ~= "center" and direction ~= "right" then
 		direction = "left"
 	end
-	local screenGui = (direction == "center" and Icon.container.TopbarCentered) or Icon.container.TopbarStandard
-	local holders = screenGui.Holders
 	local finalDirection = string.upper(string.sub(direction, 1, 1))..string.sub(direction, 2)
+	
+	-- If Overflow discovered an existing topbar with compatible holders,
+	-- parent into those holders so we truly merge into the host topbar.
+	local overrideHolders = Icon.topbarHoldersOverride
+	local alignmentHolder
+	local screenGui
+	if overrideHolders and overrideHolders[finalDirection] then
+		alignmentHolder = overrideHolders[finalDirection]
+		screenGui = alignmentHolder:FindFirstAncestorWhichIsA("ScreenGui") or Icon.topbarPrimaryScreenGuiOverride
+	else
+		screenGui = (direction == "center" and Icon.container.TopbarCentered) or Icon.container.TopbarStandard
+		local holders = screenGui.Holders
+		alignmentHolder = holders[finalDirection]
+	end
 	if not isFromParentIcon then
 		self.originalAlignment = finalDirection
 	end
 	local joinedFrame = self.joinedFrame
-	local alignmentHolder = holders[finalDirection]
 	self.screenGui = screenGui
 	self.alignmentHolder = alignmentHolder
 	if not self.isDestroyed then
@@ -987,7 +979,7 @@ function Icon:oneClick(bool)
 	-- When set to true the icon will automatically deselect when selected, this creates
 	-- the effect of a single click button
 	local singleClickJanitor = self.singleClickJanitor
-	singleClickJanitor:clean()
+	singleClickJanitor:Cleanup()
 	if bool or bool == nil then
 		singleClickJanitor:add(self.selected:Connect(function()
 			self:deselect("OneClick", self)
@@ -1002,13 +994,13 @@ function Icon:setCaption(text)
 		return self
 	end
 	local captionJanitor = self.captionJanitor
-	self.captionJanitor:clean()
+	self.captionJanitor:Cleanup()
 	if not text or text == "" then
 		self.caption = nil
 		self.captionText = nil
 		return self
 	end
-	local caption = captionJanitor:add(require(elements.Caption)(self))
+	local caption = captionJanitor:add(require("@self/Elements/Caption")(self))
 	caption:SetAttribute("CaptionText", text)
 	self.caption = caption
 	self.captionText = text
@@ -1025,7 +1017,7 @@ end
 
 function Icon:leave()
 	local joinJanitor = self.joinJanitor
-	joinJanitor:clean()
+	joinJanitor:Cleanup()
 	return self
 end
 
@@ -1066,7 +1058,7 @@ end
 function Icon:getDropdown()
 	local dropdown = self.dropdown
 	if not dropdown then
-		dropdown = require(elements.Dropdown)(self)
+		dropdown = require("@self/Elements/Dropdown")(self)
 		self.dropdown = dropdown
 		self:clipOutside(dropdown)
 	end
@@ -1096,7 +1088,7 @@ function Icon:setIndicator(keyCode)
 	-- to set an indicator for controllers as this is handled internally within the Gamepad module
 	local indicator = self.indicator
 	if not indicator then
-		indicator = self.janitor:add(require(elements.Indicator)(self, Icon))
+		indicator = self.janitor:add(require("@self/Elements/Indicator")(self, Icon))
 		self.indicator = indicator
 	end
 	self.indicatorSet:Fire(keyCode)
@@ -1241,7 +1233,7 @@ function Icon:destroy()
 		self:leave()
 	end
 	self.isDestroyed = true
-	self.janitor:clean()
+	self.janitor:Destroy()
 	Icon.iconRemoved:Fire(self)
 end
 Icon.Destroy = Icon.destroy

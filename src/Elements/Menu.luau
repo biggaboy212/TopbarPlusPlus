@@ -20,8 +20,17 @@ return function(icon)
 	menu.BorderSizePixel = 0
 	menu.Selectable = false
 	
-	local Icon = require(icon.iconModule)
-	local menuUIListLayout = Icon.container.TopbarStandard:FindFirstChild("UIListLayout", true):Clone()
+	local Icon = icon._iconRef
+	local uiListLayoutSource
+	do
+		local override = Icon.topbarHoldersOverride
+		local holder = override and (override.Left or override.Center or override.Right)
+		uiListLayoutSource = holder and holder:FindFirstChildWhichIsA("UIListLayout")
+		if not uiListLayoutSource then
+			uiListLayoutSource = Icon.container.TopbarStandard:FindFirstChild("UIListLayout", true)
+		end
+	end
+	local menuUIListLayout = uiListLayoutSource:Clone()
 	menuUIListLayout.Name = "MenuUIListLayout"
 	menuUIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 	menuUIListLayout.Parent = menu
@@ -35,14 +44,14 @@ return function(icon)
 	menuGap.Parent = menu
 	
 	local hasStartedMenu = false
-	local Themes = require(script.Parent.Parent.Features.Themes)
+	local Themes = require("../Features/Themes")
 	local function totalChildrenChanged()
 		
 		local menuJanitor = icon.menuJanitor
 		local totalIcons = #icon.menuIcons
 		if hasStartedMenu then
 			if totalIcons <= 0 then
-				menuJanitor:clean()
+				menuJanitor:Cleanup()
 				hasStartedMenu = false
 			end
 			return

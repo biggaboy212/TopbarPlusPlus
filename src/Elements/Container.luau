@@ -8,7 +8,7 @@ return function(Icon)
 	local Players =  game:GetService("Players")
 	local UserInputService = game:GetService("UserInputService")
 	local container = {}
-	local Signal = require(script.Parent.Parent.Packages.GoodSignal)
+	local Signal = require("../Packages/GoodSignal")
 	local insetChanged = Signal.new()
 	local guiInset = GuiService:GetGuiInset()
 	local startInset = 0
@@ -36,8 +36,6 @@ return function(Icon)
 			end)
 		elseif checkCount == 1 then
 			task.delay(5, function()
-				local localPlayer = Players.LocalPlayer
-				localPlayer:WaitForChild("PlayerGui")
 				if checkCount == 1 then
 					checkInset()
 				end
@@ -49,8 +47,7 @@ return function(Icon)
 			hasBecomeOldTheme = true
 			task.defer(function()
 				-- If oldtopbar, apply the Classic theme
-				local themes = script.Parent.Parent.Features.Themes
-				local Classic = require(themes.Classic)
+				local Classic = require("../Features/Themes/Classic")
 				Icon.modifyBaseTheme(Classic)
 
 				-- Also configure the oldtopbar correctly

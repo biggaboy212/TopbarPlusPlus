@@ -1,6 +1,6 @@
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local Themes = require(script.Parent.Parent.Features.Themes)
+local Themes = require("../Features/Themes")
 local PADDING = 0 -- used to be 8
 return function(icon)
 	
@@ -77,7 +77,7 @@ return function(icon)
 	dropdownList.Parent = dropdownScroller
 
 	local dropdownJanitor = icon.dropdownJanitor
-	local Icon = require(icon.iconModule)
+	local Icon = icon._iconRef
 	icon.dropdownChildAdded:Connect(function(childIcon)
 		local _, modificationUID = childIcon:modifyTheme({
 			{"Widget", "BorderSize", 0},

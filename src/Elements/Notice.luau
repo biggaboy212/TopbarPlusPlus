@@ -35,11 +35,9 @@ return function(icon, Icon)
 	noticeLabel.Font = Enum.Font.Arial
 	noticeLabel.Parent = notice
 	
-	local iconModule = script.Parent.Parent
-	local packages = iconModule.Packages
-	local Janitor = require(packages.Janitor)
-	local Signal = require(packages.GoodSignal)
-	local Utility = require(iconModule.Utility)
+	local Janitor = require("../Packages/Janitor")
+	local Signal = require("../Packages/GoodSignal")
+	local Utility = require("../Utility")
 	icon.noticeChanged:Connect(function(totalNotices)
 
 		-- Notice amount

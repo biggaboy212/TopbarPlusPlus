@@ -1,8 +1,7 @@
 {
-    "recommendations": [
-        "johnnymorganz.luau-lsp",
-        "evaera.vscode-rojo",
-        "kampfkarren.selene-vscode",
-        "johnnymorganz.stylua"
-    ]
+  "recommendations": [
+    "usernamehw.errorlens",
+    "JohnnyMorganz.luau-lsp",
+    "JohnnyMorganz.stylua"
+  ]
 }

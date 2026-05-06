@@ -50,7 +50,7 @@ return function(icon, Icon)
 	iconCorner.Name = "UICorner"
 	iconCorner.Parent = button
 
-	local menu = require(script.Parent.Menu)(icon)
+	local menu = require("./Menu")(icon)
 	local menuUIListLayout = menu.MenuUIListLayout
 	local menuGap = menu.MenuGap
 	menu.Parent = button
@@ -89,7 +89,7 @@ return function(icon, Icon)
 	clickRegion.SelectionGroup = true
 	clickRegion.Parent = iconSpot
 	
-	local Gamepad = require(script.Parent.Parent.Features.Gamepad)
+	local Gamepad = require("../Features/Gamepad")
 	Gamepad.registerButton(clickRegion)
 
 	local clickRegionCorner = iconCorner:Clone()
@@ -243,9 +243,9 @@ return function(icon, Icon)
 					initialWidgetWidth += itemWidth + contentsPadding
 				end
 			end
-			local widgetMinimumWidth = widget:GetAttribute("MinimumWidth")
-			local widgetMinimumHeight = widget:GetAttribute("MinimumHeight")
-			local widgetBorderSize = widget:GetAttribute("BorderSize")
+			local widgetMinimumWidth = widget:GetAttribute("MinimumWidth") or 0
+			local widgetMinimumHeight = widget:GetAttribute("MinimumHeight") or 0
+			local widgetBorderSize = widget:GetAttribute("BorderSize") or 0
 			local widgetWidth = math.clamp(initialWidgetWidth, widgetMinimumWidth, viewportX)
 			local menuIcons = icon.menuIcons
 			local additionalWidth = 0
@@ -326,7 +326,7 @@ return function(icon, Icon)
 			icon:updateParent()
 		end)
 	end
-	local Utility = require(script.Parent.Parent.Utility)
+	local Utility = require("../Utility")
 	local handleLabelAndImageChanges = Utility.createStagger(0.01, handleLabelAndImageChangesUnstaggered)
 	local firstTimeSettingFontFace = true
 	icon:setBehaviour("IconLabel", "Text", handleLabelAndImageChanges)
@@ -359,7 +359,7 @@ return function(icon, Icon)
 	end)
 	local function updateBorderSize()
 		task.defer(function()
-			local borderOffset = widget:GetAttribute("BorderSize")
+			local borderOffset = widget:GetAttribute("BorderSize") or 0
 			local alignment = icon.alignment
 			local alignmentOffset = (iconSpot.Visible == false and 0) or (alignment == "Right" and -borderOffset) or borderOffset
 			menu.Position = UDim2.new(0, alignmentOffset, 0, 0)

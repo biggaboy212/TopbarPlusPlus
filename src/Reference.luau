@@ -7,14 +7,14 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 local Reference = {}
 Reference.objectName = "TopbarPlusReference"
 
-function Reference.addToReplicatedStorage()
+function Reference.addToReplicatedStorage(moduleRef)
 	local existingItem = replicatedStorage:FindFirstChild(Reference.objectName)
     if existingItem then
         return false
     end
     local objectValue = Instance.new("ObjectValue")
 	objectValue.Name = Reference.objectName
-    objectValue.Value = script.Parent
+    objectValue.Value = moduleRef
     objectValue.Parent = replicatedStorage
     return objectValue
 end
