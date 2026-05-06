@@ -39,7 +39,6 @@ local function findHoldersInGui(guiContainer)
 	return holders, primaryScreenGui
 end
 
--- FIX
 local function findTopbarAssets()
 	local foundHolders = {}
 	local foundPrimary = nil
@@ -107,7 +106,6 @@ function Overflow.start(incomingIcon)
 		end
 	end
 
-	-- FIX
 	local function onHoldersReady()
 		if overflowReady then return end
 		overflowReady = true
@@ -124,7 +122,6 @@ function Overflow.start(incomingIcon)
 		Overflow.updateBoundary("Right")
 	end)
 
-	-- FIX
 	local function pollOnce()
 		if overflowReady then return end
 		local h, g = findTopbarAssets()
@@ -399,8 +396,7 @@ function Overflow.updateBoundary(alignment)
 				or centralNearestXPos + Overflow.getWidth(nearestCenterIcon) + BOUNDARY_GAP
 			local removeBoundary = (isLeft and ourNearestXPos + ourNearestXSize) or ourNearestXPos
 			local hasShifted = false
-
-			-- FIX
+			
 			if centralNearestXPos == 0 and ourNearestXPos == 0 then
 				return
 			end
