@@ -6,6 +6,8 @@ A patched TopbarPlus for executors. Construct dynamic and intuitive topbar icons
 
 - [View the Docs](./docs/index.md) *(Original TopbarPlus docs)*
 
+![preview](assets/gallery/comet.png)
+
 ## Installation & Usage
 
 There are two main ways to use TopbarPlusPlus
